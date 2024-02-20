@@ -1,2 +1,2 @@
-# spark-delta-share-extension
-This extension will create deltalog for other data formats.
+# Spark Delta Share Extension
+This extension will create a delta log for other data formats.
