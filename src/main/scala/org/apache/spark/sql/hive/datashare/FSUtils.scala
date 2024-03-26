@@ -41,9 +41,13 @@ object FSUtils {
     val conf = FSUtils.getHadoopConf(SparkSession.active)
     val listOfDirs = list(dir = dir, tries = 10, logStore,
       hadoopConf = conf, hiddenFileNameFilter = defaultHiddenFileFilter).toSeq
-    log.info("currently going to traverse recursively the partition folder {}", listOfDirs.head.getHadoopPath.toString)
-    recurseDirectory(listOfDirs.head, tries = 10, logStore,
-      hadoopConf = conf, hiddenFileNameFilter = FSUtils.defaultHiddenFileFilter)
+/*    log.info("currently going to traverse recursively the partition folder {}", listOfDirs.head.getHadoopPath.toString)*/
+    if (listOfDirs.nonEmpty) {
+      recurseDirectory(listOfDirs.head, tries = 10, logStore,
+        hadoopConf = conf, hiddenFileNameFilter = FSUtils.defaultHiddenFileFilter)
+    } else {
+      Iterator.empty
+    }
 
   }
 
