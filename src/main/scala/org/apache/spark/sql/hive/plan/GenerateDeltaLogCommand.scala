@@ -10,18 +10,18 @@ import org.apache.spark.sql.hive.datashare.ConverterUtil
 
 case class GenerateDeltaLogCommand(table: Option[CatalogTable],
                                    location: Option[String],
-                                   format:String
-                                  ) extends LeafRunnableCommand with DeltaCommand{
+                                   format: String
+                                  ) extends LeafRunnableCommand with DeltaCommand {
 
-  override val output:Seq[Attribute] = Nil
+  override val output: Seq[Attribute] = Nil
 
   override def run(sparkSession: SparkSession): Seq[Row] = {
-    val path = if(table.isDefined){
+    val path = if (table.isDefined) {
       table.get.storage.locationUri.get.getPath
-    }else{
+    } else {
       location.get
     }
-    ConverterUtil(None, table,format).generateDeltaLog(sparkSession,path,format)
+    ConverterUtil(None, table, format).generateDeltaLog(sparkSession, path, format)
   }
 
 

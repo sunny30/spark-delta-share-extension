@@ -13,20 +13,20 @@ abstract class AbstractCustomSqlParser(parserInterface: ParserInterface) extends
   def parse(input: String): LogicalPlan = synchronized {
     // Initialize the Keywords.
     initLexical
-    parseAll(start,input) match {
+    parseAll(start, input) match {
       case Success(plan, _) => plan
       case failureOrError => parserInterface.parsePlan(input)
     }
   }
+
   /* One time initialization of lexical.This avoid reinitialization of  lexical in parse method */
   protected lazy val initLexical: Unit = lexical.initialize(reservedWords)
 
   protected case class Keyword(str: String) {
     def normalize: String = lexical.normalizeKeyword(str)
+
     def parser: Parser[String] = normalize
   }
-
-
 
 
   protected implicit def asParser(k: Keyword): Parser[String] = k.parser
@@ -74,23 +74,17 @@ class CmdsLexical extends StdLexical {
   }
 
   override lazy val token: Parser[Token] =
-    ( rep1(digit) ~ scientificNotation ^^ { case i ~ s => DecimalLit(i.mkString + s) }
-      | '.' ~> (rep1(digit) ~ scientificNotation) ^^
-      { case i ~ s => DecimalLit("0." + i.mkString + s) }
-      | rep1(digit) ~ ('.' ~> digit.*) ~ scientificNotation ^^
-      { case i1 ~ i2 ~ s => DecimalLit(i1.mkString + "." + i2.mkString + s) }
-      | digit.* ~ identChar ~ (identChar | digit).* ^^
-      { case first ~ middle ~ rest => processIdent((first ++ (middle :: rest)).mkString) }
+    (rep1(digit) ~ scientificNotation ^^ { case i ~ s => DecimalLit(i.mkString + s) }
+      | '.' ~> (rep1(digit) ~ scientificNotation) ^^ { case i ~ s => DecimalLit("0." + i.mkString + s) }
+      | rep1(digit) ~ ('.' ~> digit.*) ~ scientificNotation ^^ { case i1 ~ i2 ~ s => DecimalLit(i1.mkString + "." + i2.mkString + s) }
+      | digit.* ~ identChar ~ (identChar | digit).* ^^ { case first ~ middle ~ rest => processIdent((first ++ (middle :: rest)).mkString) }
       | rep1(digit) ~ ('.' ~> digit.*).? ^^ {
       case i ~ None => NumericLit(i.mkString)
       case i ~ Some(d) => DecimalLit(i.mkString + "." + d.mkString)
     }
-      | '\'' ~> chrExcept('\'', '\n', EofCh).* <~ '\'' ^^
-      { case chars => StringLit(chars mkString "") }
-      | '"' ~> chrExcept('"', '\n', EofCh).* <~ '"' ^^
-      { case chars => StringLit(chars mkString "") }
-      | '`' ~> chrExcept('`', '\n', EofCh).* <~ '`' ^^
-      { case chars => Identifier(chars mkString "") }
+      | '\'' ~> chrExcept('\'', '\n', EofCh).* <~ '\'' ^^ { case chars => StringLit(chars mkString "") }
+      | '"' ~> chrExcept('"', '\n', EofCh).* <~ '"' ^^ { case chars => StringLit(chars mkString "") }
+      | '`' ~> chrExcept('`', '\n', EofCh).* <~ '`' ^^ { case chars => Identifier(chars mkString "") }
       | EofCh ^^^ EOF
       | '\'' ~> failure("unclosed string literal")
       | '"' ~> failure("unclosed string literal")
