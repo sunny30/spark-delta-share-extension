@@ -53,12 +53,16 @@ object DataSharePartitionUtils {
       timestampFormatter)
   }
 
-  def detectPartitionColumnName(baseTablePath: String): Seq[String]={
+  def detectPartitionColumnName(baseTablePath: String): Seq[String]= {
     val listOfDirs = FSUtils.listPartitionDirRecurse(baseTablePath).toSeq
+    if (listOfDirs.nonEmpty) {
     val mayBePartitionColumnName = detectPartitionFromSinglePath(listOfDirs.head.getHadoopPath, Set(new Path(baseTablePath)))
-    if(mayBePartitionColumnName._1.isDefined){
+    if (mayBePartitionColumnName._1.isDefined) {
       mayBePartitionColumnName._1.get.columnNames
-    }else{
+    } else {
+      Seq.empty[String]
+    }
+    } else {
       Seq.empty[String]
     }
   }

@@ -24,7 +24,7 @@ class CustomSqlParser(val parserInterface: ParserInterface) extends AbstractCust
 
   override def parse(input: String): LogicalPlan = super.parse(input)
 
-  override protected def start: Parser[LogicalPlan] = rule1
+  override protected def start: Parser[LogicalPlan] = rule1 | rule2
 
 
   def isValidCharacterInsideQuote(c: Char): Boolean = {

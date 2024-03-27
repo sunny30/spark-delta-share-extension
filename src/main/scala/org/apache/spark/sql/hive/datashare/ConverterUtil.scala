@@ -25,13 +25,28 @@ case class ConverterUtil(basePath:Option[Path], table: Option[CatalogTable], for
   def generateDeltaLog(sparkSession: SparkSession,tablePath: String, format: String):Seq[Row] ={
     val deltaPathToUse = new Path(tablePath)
     val deltaLog = DeltaLog.forTable(sparkSession, deltaPathToUse)
-    val schema = sparkSession.read.format(format).load(tablePath).schema
-    val partitionColumnNames = DataSharePartitionUtils.detectPartitionColumnName(tablePath)
-    val partitionSchema = StructType(
+    val schema = if(table.isDefined) {
+      table.get.schema
+    }else {
+      sparkSession.read.format(format).load(tablePath).schema
+    }
+
+    val partitionColumnNames = if(table.isDefined){
+      table.get.partitionColumnNames
+    }else{
+      DataSharePartitionUtils.detectPartitionColumnName(tablePath)
+    }
+
+    val partitionSchema = if(table.isDefined) {
+        table.get.partitionSchema
+    }else {
+      StructType(
       DataSharePartitionUtils.getInferSchemaWithPartition(schema, partitionColumnNames).filter(p=> p.isPartition).map(p =>
         StructField(p.columnName, DataType.fromDDL(p.datatype))
       )
     )
+    }
+
 
     val txn = deltaLog.startTransaction()
     performConvert(tablePath,format,schema,Some(partitionSchema),sparkSession,txn)

@@ -1,5 +1,6 @@
 package org.apache.spark.sql.hive.plan
 
+import org.apache.hadoop.fs.Path
 import org.apache.spark.sql.{Row, SparkSession}
 import org.apache.spark.sql.catalyst.catalog.CatalogTable
 import org.apache.spark.sql.catalyst.expressions.Attribute
@@ -20,7 +21,7 @@ case class GenerateDeltaLogCommand(table: Option[CatalogTable],
     }else{
       location.get
     }
-    ConverterUtil(None, None,format).generateDeltaLog(sparkSession,path,format)
+    ConverterUtil(None, table,format).generateDeltaLog(sparkSession,path,format)
   }
 
 
