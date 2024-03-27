@@ -14,50 +14,50 @@ import org.apache.spark.sql.delta.actions.Format
 
 import scala.collection.JavaConverters.asScalaIteratorConverter
 
-case class ConverterUtil(basePath:Option[Path], table: Option[CatalogTable], format:String) extends DeltaLogging{
+case class ConverterUtil(basePath: Option[Path], table: Option[CatalogTable], format: String) extends DeltaLogging {
 
-  def getFormat: Format={
+  def getFormat: Format = {
     Format(
       provider = format
     )
   }
 
-  def generateDeltaLog(sparkSession: SparkSession,tablePath: String, format: String):Seq[Row] ={
+  def generateDeltaLog(sparkSession: SparkSession, tablePath: String, format: String): Seq[Row] = {
     val deltaPathToUse = new Path(tablePath)
     val deltaLog = DeltaLog.forTable(sparkSession, deltaPathToUse)
-    val schema = if(table.isDefined) {
+    val schema = if (table.isDefined) {
       table.get.schema
-    }else {
+    } else {
       sparkSession.read.format(format).load(tablePath).schema
     }
 
-    val partitionColumnNames = if(table.isDefined){
+    val partitionColumnNames = if (table.isDefined) {
       table.get.partitionColumnNames
-    }else{
+    } else {
       DataSharePartitionUtils.detectPartitionColumnName(tablePath)
     }
 
-    val partitionSchema = if(table.isDefined) {
-        table.get.partitionSchema
-    }else {
+    val partitionSchema = if (table.isDefined) {
+      table.get.partitionSchema
+    } else {
       StructType(
-      DataSharePartitionUtils.getInferSchemaWithPartition(schema, partitionColumnNames).filter(p=> p.isPartition).map(p =>
-        StructField(p.columnName, DataType.fromDDL(p.datatype))
+        DataSharePartitionUtils.getInferSchemaWithPartition(schema, partitionColumnNames).filter(p => p.isPartition).map(p =>
+          StructField(p.columnName, DataType.fromDDL(p.datatype))
+        )
       )
-    )
     }
 
 
     val txn = deltaLog.startTransaction()
-    performConvert(tablePath,format,schema,Some(partitionSchema),sparkSession,txn)
+    performConvert(tablePath, format, schema, Some(partitionSchema), sparkSession, txn)
   }
 
-  def performConvert(path:String,
-                     format:String,
+  def performConvert(path: String,
+                     format: String,
                      schema: StructType,
                      partitionSchema: Option[StructType],
                      spark: SparkSession,
-                     txn: OptimisticTransaction):Seq[Row]={
+                     txn: OptimisticTransaction): Seq[Row] = {
 
     recordDeltaOperation(txn.deltaLog, "delta.convert") {
       txn.deltaLog.ensureLogDirectoryExist()
@@ -105,19 +105,19 @@ case class ConverterUtil(basePath:Option[Path], table: Option[CatalogTable], for
     Seq.empty[Row]
 
   }
-//
-//
-//  def getPatitionSchema(path:String):StructType = {
-//
-//  }
+  //
+  //
+  //  def getPatitionSchema(path:String):StructType = {
+  //
+  //  }
 
   protected def createDeltaActions(
                                     spark: SparkSession,
                                     partitionSchema: StructType,
                                     txn: OptimisticTransaction,
                                     fs: FileSystem,
-                                    schema:StructType
-                                    ): Iterator[AddFile] = {
+                                    schema: StructType
+                                  ): Iterator[AddFile] = {
 
     val shouldCollectStats = false
     val conf = SparkSession.active.sqlContext.conf
@@ -133,8 +133,6 @@ case class ConverterUtil(basePath:Option[Path], table: Option[CatalogTable], for
         adds.toIterator
       }
   }
-
-
 
 
 }

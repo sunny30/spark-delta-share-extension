@@ -7,17 +7,17 @@ import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
 import org.apache.spark.sql.delta.util.AnalysisHelper.FakeLogicalPlan
 import org.apache.spark.sql.types.{DataType, StructType}
 
-class CustomParser (val delegate: ParserInterface) extends ParserInterface{
+class CustomParser(val delegate: ParserInterface) extends ParserInterface {
 
 
-  override def parsePlan(sqlText: String): LogicalPlan ={
+  override def parsePlan(sqlText: String): LogicalPlan = {
     try {
       new CustomSqlParser(delegate).parse(sqlText) match {
         case p: LogicalPlan => p
         case _ => throw new IllegalThreadStateException("Inalid SQL")
       }
-    }catch {
-      case e:Exception => throw e
+    } catch {
+      case e: Exception => throw e
     }
   }
 

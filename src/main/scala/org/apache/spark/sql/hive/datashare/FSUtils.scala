@@ -27,7 +27,7 @@ import org.apache.spark.sql.types.{StringType, StructType}
 
 object FSUtils {
 
-  var numFiles:Long = 0
+  var numFiles: Long = 0
 
   private val log = LoggerFactory.getLogger(classOf[FSUtils])
 
@@ -41,7 +41,7 @@ object FSUtils {
     val conf = FSUtils.getHadoopConf(SparkSession.active)
     val listOfDirs = list(dir = dir, tries = 10, logStore,
       hadoopConf = conf, hiddenFileNameFilter = defaultHiddenFileFilter).toSeq
-/*    log.info("currently going to traverse recursively the partition folder {}", listOfDirs.head.getHadoopPath.toString)*/
+    /*    log.info("currently going to traverse recursively the partition folder {}", listOfDirs.head.getHadoopPath.toString)*/
     if (listOfDirs.nonEmpty) {
       recurseDirectory(listOfDirs.head, tries = 10, logStore,
         hadoopConf = conf, hiddenFileNameFilter = FSUtils.defaultHiddenFileFilter)
@@ -127,7 +127,7 @@ object FSUtils {
 
 
   protected def doList(basePath: String): Dataset[SerializableFileStatus] = {
-    val spark  = SparkSession.active
+    val spark = SparkSession.active
     val conf = SparkSession.active.sparkContext.broadcast(serializableConf)
     DeltaFileOperations
       .recursiveListDirs(spark, Seq(basePath), conf, ConvertUtils.dirNameFilter)
@@ -135,34 +135,33 @@ object FSUtils {
   }
 
 
-
   //all data files have uniform schema in BDF
-  def allFiles(basePath:String, schema: Option[StructType] = None): Dataset[ConvertTargetFile] ={
+  def allFiles(basePath: String, schema: Option[StructType] = None): Dataset[ConvertTargetFile] = {
     val schemaDefined = schema.isDefined
-    val files = doList(basePath).mapPartitions{iter => {
+    val files = doList(basePath).mapPartitions { iter => {
       val fileStatuses = iter.toSeq
       fileStatuses.map { fileStatus =>
-        if(schemaDefined) {
+        if (schemaDefined) {
           ConvertTargetFile(
             fileStatus,
             None,
             Some(schema.get.toDDL))
-        }else{
+        } else {
           ConvertTargetFile(
             fileStatus,
             None,
             None)
         }
       }.toIterator
-    }}
+    }
+    }
 
     files.cache()
     files
   }
 
 
-
-  def getPartitionValues(file: SerializableFileStatus, basePath: Path):Map[String, String] = {
+  def getPartitionValues(file: SerializableFileStatus, basePath: Path): Map[String, String] = {
     val path = file.getHadoopPath
     val pathStr = file.getHadoopPath.toUri.toString
     val dateFormatter = DateFormatter()
@@ -190,10 +189,9 @@ object FSUtils {
         }).toMap
       }
       res.get
-    }else{
-      Map.empty[String,String]
-  }
-
+    } else {
+      Map.empty[String, String]
+    }
 
 
   }
@@ -204,13 +202,13 @@ object FSUtils {
                      fs: FileSystem,
                      conf: SQLConf,
                      partitionSchema: Option[StructType],
-                     useAbsolutePath: Boolean = false): AddFile ={
+                     useAbsolutePath: Boolean = false): AddFile = {
 
-    numFiles = numFiles+1
+    numFiles = numFiles + 1
     val file = targetFile.fileStatus
     val path = file.getHadoopPath
 
-    val partition = getPartitionValues(file,basePath)
+    val partition = getPartitionValues(file, basePath)
 
     val pathStrForAddFile = if (!useAbsolutePath) {
       val relativePath = DeltaFileOperations.tryRelativizePath(fs, basePath, path)
@@ -225,9 +223,6 @@ object FSUtils {
 
 
   }
-
-
-
 
 
 }

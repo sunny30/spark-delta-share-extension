@@ -1,4 +1,5 @@
 package org.apache.spark.sql.hive.parser
+
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.TableIdentifier
 import org.apache.spark.sql.catalyst.parser.ParserInterface
@@ -18,8 +19,10 @@ class CustomSqlParser(val parserInterface: ParserInterface) extends AbstractCust
   val USING = Keyword("using")
 
 
-  def dash:Parser[String] = "-"
-  def underscore:Parser[String] = "_"
+  def dash: Parser[String] = "-"
+
+  def underscore: Parser[String] = "_"
+
   def dot: Parser[String] = "."
 
   override def parse(input: String): LogicalPlan = super.parse(input)
@@ -68,19 +71,17 @@ class CustomSqlParser(val parserInterface: ParserInterface) extends AbstractCust
     }
   }
 
-  def parseTable: Parser[(String,String)] = {
+  def parseTable: Parser[(String, String)] = {
     sqlIdentifier ~ dot ~ (sqlIdentifier) ^^ {
-      case d ~ _ ~ t => (d,t)
+      case d ~ _ ~ t => (d, t)
     }
   }
 
 
-
-
-  def rule1:Parser[LogicalPlan]=  GENERATE~DELTALOG~FOR~TABLE~parseTable~USING~ident ^^{
-    case  _~_~_~_~t~_~f => {
-      val ct = SparkSession.active.sessionState.catalog.getTableMetadata(TableIdentifier(t._2,Some(t._1)))
-      GenerateDeltaLogCommand(Some(ct), None,f)
+  def rule1: Parser[LogicalPlan] = GENERATE ~ DELTALOG ~ FOR ~ TABLE ~ parseTable ~ USING ~ ident ^^ {
+    case _ ~ _ ~ _ ~ _ ~ t ~ _ ~ f => {
+      val ct = SparkSession.active.sessionState.catalog.getTableMetadata(TableIdentifier(t._2, Some(t._1)))
+      GenerateDeltaLogCommand(Some(ct), None, f)
     }
   }
 
