@@ -30,6 +30,9 @@ case class ConverterUtil(basePath: Option[Path], table: Option[CatalogTable], fo
     val schema = if (table.isDefined) {
       table.get.schema
     } else {
+      if (format.equals("csv")) {
+        sparkSession.read.format(format).option("header", "true").load(tablePath).schema
+      }
       sparkSession.read.format(format).load(tablePath).schema
     }
 
