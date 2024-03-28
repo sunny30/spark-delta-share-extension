@@ -32,8 +32,9 @@ case class ConverterUtil(basePath: Option[Path], table: Option[CatalogTable], fo
     } else {
       if (format.equals("csv")) {
         sparkSession.read.format(format).option("header", "true").load(tablePath).schema
+      }else {
+        sparkSession.read.format(format).load(tablePath).schema
       }
-      sparkSession.read.format(format).load(tablePath).schema
     }
 
     val partitionColumnNames = if (table.isDefined) {
