@@ -30,10 +30,11 @@ case class ConverterUtil(basePath: Option[Path], table: Option[CatalogTable], fo
     val schema = if (table.isDefined) {
       table.get.schema
     } else {
-      if (format.equals("csv")) {
-        sparkSession.read.format(format).option("header", "true").load(tablePath).schema
+      format.toLowerCase match {
+        case "csv" => sparkSession.read.format(format).option("header", "true").load(tablePath).schema
+        case "json" => sparkSession.read.format(format).option("multiLine", true).load(tablePath).schema
+        case _ => sparkSession.read.format(format).load(tablePath).schema
       }
-      sparkSession.read.format(format).load(tablePath).schema
     }
 
     val partitionColumnNames = if (table.isDefined) {
