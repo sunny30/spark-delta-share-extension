@@ -1,5 +1,6 @@
 package org.apache.spark.sql.hive.datashare
 
+
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.catalog.Catalog
 import org.apache.spark.sql.catalyst.catalog.CatalogTable
@@ -11,6 +12,7 @@ import org.apache.spark.sql.delta.metering.DeltaLogging
 import org.apache.spark.sql.delta.sources.DeltaSQLConf
 import org.apache.spark.sql.types.{DataType, StructField, StructType}
 import org.apache.spark.sql.delta.actions.Format
+import org.apache.spark.sql.hive.datashare.DeltashareConsts.{delta_log, last_checkpoint, parquet}
 
 import scala.collection.JavaConverters.asScalaIteratorConverter
 
@@ -98,18 +100,21 @@ case class ConverterUtil(basePath: Option[Path], table: Option[CatalogTable], fo
         Map.empty,
         metrics)
 
-
+      // Delete the check point and parquet file for now which is causing issue for DeltaLog standalone read issue
+      // with delta share server. And also for now this is not being used.
+      val fsStatus = fs.listStatus(new Path(path + delta_log))
+      fsStatus.foreach(fileStatus => {
+        if (fileStatus.getPath.getName.endsWith(parquet)
+          || fileStatus.getPath.getName.endsWith(last_checkpoint)) {
+          fs.delete(fileStatus.getPath)
+        }
+      })
     }
-
 
     Seq.empty[Row]
 
   }
-  //
-  //
-  //  def getPatitionSchema(path:String):StructType = {
-  //
-  //  }
+
 
   protected def createDeltaActions(
                                     spark: SparkSession,
